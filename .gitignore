@@ -31,5 +31,5 @@ go.work.sum
 # .idea/
 # .vscode/
 
-storage/logs/
+storages/logs/
 config/production.yaml
