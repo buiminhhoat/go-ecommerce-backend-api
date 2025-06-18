@@ -1,44 +1,39 @@
 package initialize
 
 import (
-	"fmt"
-
-	"github.com/buiminhhoat/go-ecommerce-backend-api/internal/controller"
-	"github.com/buiminhhoat/go-ecommerce-backend-api/internal/middlewares"
+	"github.com/buiminhhoat/go-ecommerce-backend-api/global"
+	"github.com/buiminhhoat/go-ecommerce-backend-api/internal/routers"
 	"github.com/gin-gonic/gin"
 )
 
-func AA() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		fmt.Println("Befor --> AA")
-		c.Next()
-		fmt.Println("Alter --> AA")
-	}
-}
-
-func BB() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		fmt.Println("Befor --> BB")
-		c.Next()
-		fmt.Println("Alter --> BB")
-	}
-}
-
-func CC(c *gin.Context) {
-	fmt.Println("Before --> CC")
-	c.Next()
-	fmt.Println("Alter --> CC")
-}
-
 func InitRouter() *gin.Engine {
-	r := gin.Default()
-	r.Use(middlewares.AuthenMiddleware(), BB(), CC)
-
-	v1 := r.Group("/v1")
-	{
-		v1.GET("/ping/", controller.NewPongController().Pong)
-		v1.GET("/user/1", controller.NewUserController().GetUserById)
+	var r *gin.Engine
+	if global.Config.Server.Mode == "dev" {
+		gin.SetMode(gin.DebugMode)
+		gin.ForceConsoleColor()
+		r = gin.Default()
+	} else {
+		gin.SetMode(gin.ReleaseMode)
+		r = gin.New()
 	}
+	// middleware
+	// r.Use() // logger
+	// r.Use() // cross
+	// r.Use() // limiter global
+	manageRouter := routers.RouterGroupApp.Manage
+	userRouter := routers.RouterGroupApp.User
 
+	MainGroup := r.Group("/v1/2025")
+	{
+		MainGroup.GET("/checkStatus") // tracking monitor
+	}
+	{
+		userRouter.InitUserRouter(MainGroup)
+		userRouter.InitProductRouter(MainGroup)
+	}
+	{
+		manageRouter.InitUserRouter(MainGroup)
+		manageRouter.InitAdminRouter(MainGroup)
+	}
 	return r
 }
