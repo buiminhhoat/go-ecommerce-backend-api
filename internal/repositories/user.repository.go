@@ -1,5 +1,10 @@
 package repositories
 
+import (
+	"github.com/buiminhhoat/go-ecommerce-backend-api/global"
+	"github.com/buiminhhoat/go-ecommerce-backend-api/internal/database"
+)
+
 // type UserRepository struct{}
 
 // func NewUserRepository() *UserRepository {
@@ -17,13 +22,23 @@ type IUserRepository interface {
 }
 
 type userRepository struct {
+	sqlc *database.Queries
 }
 
 // GetUserByEmail implements IUserRepository.
-func (u *userRepository) GetUserByEmail(email string) bool {
-	return true
+func (ur *userRepository) GetUserByEmail(email string) bool {
+	// row := global.Mdb.Table(TableNameGoCrmUser).Where("usr_email = ?", email).First(&model.GoCrmUser{}).RowsAffected
+
+	user, err := ur.sqlc.GetUserByEmailSQLC(ctx, email)
+
+	if err != nil {
+		return false
+	}
+	return user.UsrID != NumberNull
 }
 
 func NewUserRepository() IUserRepository {
-	return &userRepository{}
+	return &userRepository{
+		sqlc: database.New(global.Mdbc),
+	}
 }

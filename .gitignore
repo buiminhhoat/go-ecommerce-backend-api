@@ -33,3 +33,4 @@ go.work.sum
 
 storages/logs/
 config/production.yaml
+credentials/
