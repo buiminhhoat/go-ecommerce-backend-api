@@ -1,20 +1,22 @@
-GOOSE_DBSTRING = "root:root@tcp(127.0.0.1:3306)/shopdevgo"
+GOOSE_DBSTRING ?= "root:root@tcp(127.0.0.1:3306)/shopdevgo"
 GOOSE_MIGRATION_DIR ?= sql/schema
+GOOSE_DRIVER ?= mysql 
 
 # name app_name
 APP_NAME = server
 
-run:
+docker_build:
+	docker-compose up -d --build 
+	docker-compose ps 
+
+docker_stop:
+	docker-compose down
+
+dev:
 	go run ./cmd/$(APP_NAME)/
 
-kill:
-	docker compose kill
-
-up:
+docker_up:
 	docker compose up -d 
-
-down:
-	docker compose down
 
 upse:
 	@GOOSE_DRIVER=mysql GOOSE_DBSTRING=$(GOOSE_DBSTRING) goose -dir=$(GOOSE_MIGRATION_DIR) up 
@@ -23,6 +25,9 @@ downse:
 resetse:
 	@GOOSE_DRIVER=mysql GOOSE_DBSTRING=$(GOOSE_DBSTRING) goose -dir=$(GOOSE_MIGRATION_DIR) reset
 
-.PHONY: run downse upse resetse
+sqlgen:
+	sqlc generate 
+
+.PHONY: dev downse upse resetse docker_build docker_stop docker_up
 
 .PHONY: air

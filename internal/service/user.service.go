@@ -1,15 +1,17 @@
 package service
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
-	"strconv"
 	"time"
 
+	"github.com/buiminhhoat/go-ecommerce-backend-api/global"
 	"github.com/buiminhhoat/go-ecommerce-backend-api/internal/repositories"
 	"github.com/buiminhhoat/go-ecommerce-backend-api/internal/utils/crypto"
 	"github.com/buiminhhoat/go-ecommerce-backend-api/internal/utils/random"
-	"github.com/buiminhhoat/go-ecommerce-backend-api/internal/utils/sendto"
 	"github.com/buiminhhoat/go-ecommerce-backend-api/pkg/response"
+	"github.com/segmentio/kafka-go"
 )
 
 // type UserService struct {
@@ -77,11 +79,30 @@ func (us *userService) Register(email string, purpose string) int {
 		return response.ErrInvalidOTP
 	}
 	// 4. Send Email OTP
-	err = sendto.SendTemplateEmailOtp([]string{email}, "official.buiminhhoat@gmail.com",
-		"otp-auth.html", map[string]interface{}{
-			"otp": strconv.Itoa(otp),
-		})
+	// err = sendto.SendTemplateEmailOtp([]string{email}, "official.buiminhhoat@gmail.com",
+	// 	"otp-auth.html", map[string]interface{}{
+	// 		"otp": strconv.Itoa(otp),
+	// 	})
+	// if err != nil {
+	// 	return response.ErrSendEmailOtp
+	// }
+
+	// Send OTP via Kafka
+	body := make(map[string]interface{})
+	body["otp"] = otp
+	body["email"] = email
+
+	bodyRequest, _ := json.Marshal(body)
+	message := kafka.Message{
+		Key:   []byte("otp-auth"),
+		Value: []byte(bodyRequest),
+		Time:  time.Now(),
+	}
+
+	err = global.KafkaProducer.WriteMessages(context.Background(), message)
+
 	if err != nil {
+		fmt.Println("Err send to Kafka::%v\n", err)
 		return response.ErrSendEmailOtp
 	}
 	return response.ErrCodeSuccess
