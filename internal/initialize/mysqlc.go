@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/buiminhhoat/go-ecommerce-backend-api/global"
-	"github.com/buiminhhoat/go-ecommerce-backend-api/internal/model"
 	"go.uber.org/zap"
 	"gorm.io/gen"
 )
@@ -28,7 +27,7 @@ func InitMySqlC() {
 	global.Mdbc = db
 
 	SetPool()
-	migrateTable()
+	// migrateTable()
 	genTableDAO()
 }
 
@@ -63,13 +62,13 @@ func genTableDAOMySqlC() {
 	g.Execute()
 }
 
-func migrateTableMySqlC() {
-	err := global.Mdb.AutoMigrate(
-		// &po.User{},
-		// &po.Role{},
-		&model.GoCrmUserV2{},
-	)
-	if err != nil {
-		fmt.Println("Migrate tables error: ", err)
-	}
-}
+// func migrateTableMySqlC() {
+// 	err := global.Mdb.AutoMigrate(
+// 		// &po.User{},
+// 		// &po.Role{},
+// 		&model.GoCrmUserV2{},
+// 	)
+// 	if err != nil {
+// 		fmt.Println("Migrate tables error: ", err)
+// 	}
+// }
