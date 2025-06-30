@@ -4,10 +4,11 @@ import (
 	"fmt"
 
 	"github.com/buiminhhoat/go-ecommerce-backend-api/global"
+	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
 
-func Run() {
+func Run() *gin.Engine {
 	LoadConfig()
 	fmt.Println("Loading configuration mysql: ", global.Config.Mysql.Username)
 	InitLogger()
@@ -20,5 +21,5 @@ func Run() {
 
 	r := InitRouter()
 
-	r.Run(":8888")
+	return r
 }

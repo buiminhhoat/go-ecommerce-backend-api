@@ -1,0 +1,24 @@
+basePath: /v1/2025
+externalDocs:
+  description: OpenAPI
+  url: https://swagger.io/resources/open-api/
+host: localhost:8888
+info:
+  contact:
+    email: official.buiminhhoat@gmail.com
+    name: Hoat Bui Minh
+    url: https://github.com/buiminhhoat/go-ecommerce-backend-api
+  description: This is a sample server celler server.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: https://github.com/buiminhhoat/go-ecommerce-backend-api
+  title: API Documentation Ecommerce Backend SHOPDEVGO
+  version: 1.0.0
+paths: {}
+schemes:
+- http
+securityDefinitions:
+  BasicAuth:
+    type: basic
+swagger: "2.0"
