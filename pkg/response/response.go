@@ -12,6 +12,12 @@ type ResponseData struct {
 	Data    interface{} `json:"data"`
 }
 
+type ErrorResponseData struct {
+	Code    int         `json:"code"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
+}
+
 func SuccessResponse(c *gin.Context, code int, data interface{}) {
 	c.JSON(http.StatusOK, ResponseData{
 		Code:    code,

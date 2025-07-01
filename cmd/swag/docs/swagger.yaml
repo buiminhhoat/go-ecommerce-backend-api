@@ -1,7 +1,37 @@
 basePath: /v1/2025
-externalDocs:
-  description: OpenAPI
-  url: https://swagger.io/resources/open-api/
+definitions:
+  model.RegisterInput:
+    properties:
+      verify_key:
+        type: string
+      verify_purpose:
+        type: string
+      verify_type:
+        type: integer
+    type: object
+  model.VerifyInput:
+    properties:
+      verify_code:
+        type: string
+      verify_key:
+        type: string
+    type: object
+  response.ErrorResponseData:
+    properties:
+      code:
+        type: integer
+      data: {}
+      message:
+        type: string
+    type: object
+  response.ResponseData:
+    properties:
+      code:
+        type: integer
+      data: {}
+      message:
+        type: string
+    type: object
 host: localhost:8888
 info:
   contact:
@@ -15,10 +45,59 @@ info:
   termsOfService: https://github.com/buiminhhoat/go-ecommerce-backend-api
   title: API Documentation Ecommerce Backend SHOPDEVGO
   version: 1.0.0
-paths: {}
+paths:
+  /user/register:
+    post:
+      consumes:
+      - application/json
+      description: When user is registered send otp to end
+      parameters:
+      - description: payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/model.RegisterInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponseData'
+      summary: User Registration
+      tags:
+      - account management
+  /user/verify_account:
+    post:
+      consumes:
+      - application/json
+      description: Verify OTP Login By User
+      parameters:
+      - description: payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/model.VerifyInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponseData'
+      summary: Verify OTP Login By User
+      tags:
+      - account management
 schemes:
 - http
-securityDefinitions:
-  BasicAuth:
-    type: basic
 swagger: "2.0"

@@ -115,8 +115,28 @@ func (s *sUserLogin) Register(ctx context.Context, in *model.RegisterInput) (cod
 	return response.ErrCodeSuccess, nil
 }
 
-func (s *sUserLogin) VerifyOTP(ctx context.Context) error {
-	return nil
+func (s *sUserLogin) VerifyOTP(ctx context.Context, in *model.VerifyInput) (out model.VerifyOTPOutput, err error) {
+	hashKey := crypto.GetHash(strings.ToLower(in.VerifyKey))
+
+	otpFound, err := global.Rdb.Get(ctx, utils.GetUserKey(hashKey)).Result()
+	if err != nil {
+		return out, err
+	}
+	if in.VerifyCode != otpFound {
+		return out, fmt.Errorf("OTP not match")
+	}
+	infoOTP, err := s.r.GetInfoOTP(ctx, hashKey)
+	if err != nil {
+		return out, err
+	}
+	err = s.r.UpdateUserVerificationStatus(ctx, hashKey)
+	if err != nil {
+		return out, err
+	}
+
+	out.Token = infoOTP.VerifyKeyHash
+	out.Message = "success"
+	return out, nil
 }
 
 func (s *sUserLogin) UpdatePasswordRegister(ctx context.Context) error {

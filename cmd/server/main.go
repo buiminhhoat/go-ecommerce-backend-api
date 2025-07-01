@@ -19,14 +19,9 @@ import (
 // @license.name  Apache 2.0
 // @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
 
-// @host      localhost:8888Z
+// @host      localhost:8888
 // @BasePath  /v1/2025
 // @schemes   http
-
-// @securityDefinitions.basic  BasicAuth
-
-// @externalDocs.description  OpenAPI
-// @externalDocs.url          https://swagger.io/resources/open-api/
 
 func main() {
 	r := initialize.Run()
