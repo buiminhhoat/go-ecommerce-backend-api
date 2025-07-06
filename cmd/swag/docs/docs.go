@@ -24,6 +24,46 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/user/login": {
+            "post": {
+                "description": "User Login",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "account management"
+                ],
+                "summary": "User Login",
+                "parameters": [
+                    {
+                        "description": "payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.LoginInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ResponseData"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponseData"
+                        }
+                    }
+                }
+            }
+        },
         "/user/register": {
             "post": {
                 "description": "When user is registered send otp to end",
@@ -45,6 +85,46 @@ const docTemplate = `{
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/model.RegisterInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ResponseData"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponseData"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/update_password_register": {
+            "post": {
+                "description": "UpdatePasswordRegister",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "account management"
+                ],
+                "summary": "UpdatePasswordRegister",
+                "parameters": [
+                    {
+                        "description": "payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.UpdatePasswordRegisterInput"
                         }
                     }
                 ],
@@ -106,6 +186,17 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "model.LoginInput": {
+            "type": "object",
+            "properties": {
+                "user_account": {
+                    "type": "string"
+                },
+                "user_password": {
+                    "type": "string"
+                }
+            }
+        },
         "model.RegisterInput": {
             "type": "object",
             "properties": {
@@ -117,6 +208,17 @@ const docTemplate = `{
                 },
                 "verify_type": {
                     "type": "integer"
+                }
+            }
+        },
+        "model.UpdatePasswordRegisterInput": {
+            "type": "object",
+            "properties": {
+                "user_password": {
+                    "type": "string"
+                },
+                "user_token": {
+                    "type": "string"
                 }
             }
         },

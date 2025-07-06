@@ -3,6 +3,7 @@ package impl
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strconv"
@@ -14,6 +15,7 @@ import (
 	"github.com/buiminhhoat/go-ecommerce-backend-api/internal/database"
 	"github.com/buiminhhoat/go-ecommerce-backend-api/internal/model"
 	"github.com/buiminhhoat/go-ecommerce-backend-api/internal/utils"
+	"github.com/buiminhhoat/go-ecommerce-backend-api/internal/utils/auth"
 	"github.com/buiminhhoat/go-ecommerce-backend-api/internal/utils/crypto"
 	"github.com/buiminhhoat/go-ecommerce-backend-api/internal/utils/random"
 	"github.com/buiminhhoat/go-ecommerce-backend-api/internal/utils/sendto"
@@ -31,8 +33,52 @@ func NewUserLoginImpl(r *database.Queries) *sUserLogin {
 	}
 }
 
-func (s *sUserLogin) Login(ctx context.Context) error {
-	return nil
+func (s *sUserLogin) Login(ctx context.Context, in *model.LoginInput) (codeResult int, out model.LoginOutput, err error) {
+	// logic login
+	userBase, err := s.r.GetOneUserInfo(ctx, in.UserAccount)
+	if err != nil {
+		return response.ErrCodeAuthFailed, out, err
+	}
+
+	// 2. Check password?
+	if !crypto.MatchingPassword(userBase.UserPassword, in.UserPassword, userBase.UserSalt) {
+		return response.ErrCodeAuthFailed, out, fmt.Errorf("Does not match password")
+	}
+
+	// 3. Check two-factor authentication
+
+	// 4. Update password time
+	go s.r.LoginUserBase(ctx, database.LoginUserBaseParams{
+		UserLoginIp:  sql.NullString{String: "127.0.0.1", Valid: true},
+		UserAccount:  in.UserAccount,
+		UserPassword: in.UserPassword,
+	})
+
+	// 5. UUID
+	subToken := utils.GenerateCliTokenUUID(int(userBase.UserID))
+	log.Println("Subtoken: ", subToken)
+	// 6. Get user_info table
+	infoUser, err := s.r.GetUser(ctx, uint64(userBase.UserID))
+	if err != nil {
+		return response.ErrCodeAuthFailed, out, err
+	}
+	// Convert to JSON
+	infoUserJson, err := json.Marshal(infoUser)
+	if err != nil {
+		return response.ErrCodeAuthFailed, out, fmt.Errorf("Convert to json failed: %v", err)
+	}
+	// 7. Give infoUserJson to redis with key = subToken
+	err = global.Rdb.Set(ctx, subToken, infoUserJson, time.Duration(consts.TIME_OTP_REGISTER)*time.Minute).Err()
+	if err != nil {
+		return response.ErrCodeAuthFailed, out, err
+	}
+	// 8. Create token
+	out.Token, err = auth.CreateToken(subToken)
+	if err != nil {
+		return
+	}
+
+	return 200, out, nil
 }
 
 func (s *sUserLogin) Register(ctx context.Context, in *model.RegisterInput) (codeResult int, err error) {
@@ -139,6 +185,52 @@ func (s *sUserLogin) VerifyOTP(ctx context.Context, in *model.VerifyInput) (out 
 	return out, nil
 }
 
-func (s *sUserLogin) UpdatePasswordRegister(ctx context.Context) error {
-	return nil
+func (s *sUserLogin) UpdatePasswordRegister(ctx context.Context, token string, password string) (userId int, err error) {
+	infoOTP, err := s.r.GetInfoOTP(ctx, token)
+	if err != nil {
+		return response.ErrCodeUserOtpNotExists, err
+	}
+
+	if infoOTP.IsVerified.Int32 == 0 {
+		return response.ErrCodeOtpNotExists, fmt.Errorf("User OTP not verified")
+	}
+
+	userBase := database.AddUserBaseParams{}
+	userBase.UserAccount = infoOTP.VerifyKey
+	userSalt, err := crypto.GenerateSalt(16)
+	if err != nil {
+		return response.ErrCodeOtpNotExists, err
+	}
+	userBase.UserSalt = userSalt
+	userBase.UserPassword = crypto.HashPassword(password, userSalt)
+
+	// Add UserBase to user_base table
+	newUserBase, err := s.r.AddUserBase(ctx, userBase)
+	if err != nil {
+		return response.ErrCodeOtpNotExists, err
+	}
+	user_id, err := newUserBase.LastInsertId()
+	if err != nil {
+		return response.ErrCodeOtpNotExists, err
+	}
+	newUserInfo, err := s.r.AddUserHaveUserId(ctx, database.AddUserHaveUserIdParams{
+		UserID:               uint64(user_id),
+		UserAccount:          infoOTP.VerifyKey,
+		UserNickname:         sql.NullString{String: infoOTP.VerifyKey, Valid: true},
+		UserAvatar:           sql.NullString{String: "", Valid: true},
+		UserState:            1,
+		UserMobile:           sql.NullString{String: "", Valid: true},
+		UserGender:           sql.NullInt16{Int16: 0, Valid: true},
+		UserBirthday:         sql.NullTime{Time: time.Time{}, Valid: false},
+		UserEmail:            sql.NullString{String: infoOTP.VerifyKey, Valid: true},
+		UserIsAuthentication: 1,
+	})
+	if err != nil {
+		return response.ErrCodeOtpNotExists, err
+	}
+	user_id, err = newUserInfo.LastInsertId()
+	if err != nil {
+		return response.ErrCodeOtpNotExists, err
+	}
+	return int(user_id), nil
 }

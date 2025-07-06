@@ -6,20 +6,25 @@ const (
 	ErrInvalidToken     = 30001 // Token is invalid
 	ErrInvalidOTP       = 30002
 	ErrSendEmailOtp     = 30003
+	// User Authentication
+	ErrCodeAuthFailed = 40005
 	// Register Code
 	ErrCodeUserHasExists = 50001 // User has alrady registered
 
 	// Err Login
-	ErrCodeOtpNotExists = 60009
+	ErrCodeOtpNotExists     = 60009
+	ErrCodeUserOtpNotExists = 60008
 )
 
 // message
 var msg = map[int]string{
-	ErrCodeSuccess:       "success",
-	ErrCodeParamInvalid:  "Email is invalid",
-	ErrInvalidToken:      "Token is invalid",
-	ErrInvalidOTP:        "OTP is invalid",
-	ErrCodeUserHasExists: "User has alrady registered",
-	ErrSendEmailOtp:      "Error when send email OTP",
-	ErrCodeOtpNotExists:  "OTP exists but not registered",
+	ErrCodeSuccess:          "success",
+	ErrCodeParamInvalid:     "Email is invalid",
+	ErrInvalidToken:         "Token is invalid",
+	ErrInvalidOTP:           "OTP is invalid",
+	ErrCodeUserHasExists:    "User has alrady registered",
+	ErrSendEmailOtp:         "Error when send email OTP",
+	ErrCodeOtpNotExists:     "OTP exists but not registered",
+	ErrCodeUserOtpNotExists: "User OTP not exists",
+	ErrCodeAuthFailed:       "Authentication failed",
 }
