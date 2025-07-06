@@ -3,6 +3,7 @@ package context
 import (
 	"context"
 	"errors"
+	"log"
 
 	"github.com/buiminhhoat/go-ecommerce-backend-api/internal/utils/cache"
 )
@@ -29,5 +30,6 @@ func GetUserIdFromUUID(ctx context.Context) (uint64, error) {
 	if err := cache.GetCache(ctx, sUUID, &infoUser); err != nil {
 		return 0, err
 	}
+	log.Println("infoUser:::", infoUser)
 	return infoUser.UserId, nil
 }

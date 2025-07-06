@@ -108,7 +108,7 @@ func (s *sUserLogin) Login(ctx context.Context, in *model.LoginInput) (codeResul
 		return response.ErrCodeAuthFailed, out, fmt.Errorf("Convert to json failed: %v", err)
 	}
 	// 7. Give infoUserJson to redis with key = subToken
-	err = global.Rdb.Set(ctx, subToken, infoUserJson, time.Duration(consts.TIME_OTP_REGISTER)*time.Minute).Err()
+	err = global.Rdb.Set(ctx, subToken, infoUserJson, time.Duration(consts.TIME_2FA_OTP_REGISTER)*time.Minute).Err()
 	if err != nil {
 		return response.ErrCodeAuthFailed, out, err
 	}
