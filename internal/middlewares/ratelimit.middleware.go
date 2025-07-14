@@ -20,7 +20,8 @@ type RateLimiter struct {
 
 func NewRateLimiter() *RateLimiter {
 	rateLimiter := &RateLimiter{
-		globalRateLimiter:         rateLimiter("100-S"),
+		// globalRateLimiter:         rateLimiter("100-S"),
+		globalRateLimiter:         rateLimiter("10000-S"),
 		publicAPIRateLimiter:      rateLimiter("80-S"),
 		userPrivateAPIRateLimiter: rateLimiter("50-S"),
 	}

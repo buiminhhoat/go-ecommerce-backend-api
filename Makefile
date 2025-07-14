@@ -16,7 +16,7 @@ dev:
 	go run ./cmd/$(APP_NAME)/
 
 docker_up:
-	docker compose up -d 
+	docker-compose -f environment/docker-compose-dev.yml up 
 
 up_by_one:
 	@GOOSE_DRIVER=$(GOOSE_DRIVER) GOOSE_DBSTRING=$(GOOSE_DBSTRING) goose -dir=$(GOOSE_MIGRATION_DIR) up-by-one 
