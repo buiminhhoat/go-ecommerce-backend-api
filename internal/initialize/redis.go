@@ -3,6 +3,7 @@ package initialize
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/buiminhhoat/go-ecommerce-backend-api/global"
 	"github.com/redis/go-redis/v9"
@@ -28,6 +29,40 @@ func InitRedis() {
 	global.Rdb = rdb
 
 	redisExample()
+}
+
+func InitRedisSentinel() {
+	rdb := redis.NewFailoverClient(&redis.FailoverOptions{
+		MasterName:    "mymaster", // Tên master do Sentinel quản lý
+		SentinelAddrs: []string{"127.0.0.1:26379", "127.0.0.1:26380", "127.0.0.1:26381"},
+		DB:            0,            // Sử dụng database mặc định
+		Password:      "masterpass", // Nếu Redis có mật khẩu, điền vào đây
+	})
+
+	// Check the connection
+	_, err := rdb.Ping(ctx).Result()
+	if err != nil {
+		log.Fatalf("Failed to connect to Redis Sentinel: %v", err)
+	}
+
+	fmt.Println("Connected to Redis Sentinel successfully!")
+
+	// Try setting and getting a value
+	err = rdb.Set(ctx, "test_key", "Hello Redis Sentinel!", 0).Err()
+	if err != nil {
+		log.Fatalf("Error setting key: %v", err)
+	}
+
+	val, err := rdb.Get(ctx, "test_key").Result()
+	if err != nil {
+		log.Fatalf("Error getting key: %v", err)
+	}
+
+	fmt.Println("Value of test_key:", val)
+
+	global.Logger.Info("Initializing RedisSentinel Successfully")
+	global.Rdb = rdb
+	// redisExample()
 }
 
 func redisExample() {

@@ -34,5 +34,9 @@ go.work.sum
 storages/logs/
 config/production.yaml
 credentials/
-environment/data/
+environment/data/mysql_data
+environment/data/prometheus_data
+environment/data/redis
+environment/data/redis_data
+environment/data/redis_cluster_data
 environment/grafana-storage

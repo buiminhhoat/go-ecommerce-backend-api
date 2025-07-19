@@ -2,6 +2,7 @@ version: '3.9'
 
 networks:
   pre-go-local-networks:
+    name: pre-go-local-networks
     driver: bridge
 
 services:
@@ -38,6 +39,7 @@ services:
     #   - "9090:8080"
     # depends_on:
     #   - kafka
+
   mysql:
     image: mysql:8.0
     container_name: mysql_container
@@ -52,15 +54,7 @@ services:
       # - ./init:/docker-entrypoint-initdb.d
     networks:
       - pre-go-local-networks
-  redis:
-    image: redis:7.0
-    container_name: redis_container
-    ports:
-      - "6379:6379"
-    volumes:
-      - ./data/redis_data:/data
-    networks:
-      - pre-go-local-networks
+
   prometheus:
     image: prom/prometheus:latest
     container_name: pre-event-prometheus
@@ -92,12 +86,105 @@ services:
       #enable logger
       - GF_LOG_MODE=console file
       - GF_LOG_FILTERS=alerting.notifier.slack:debug alermanager:debug ngalert:debug
-
     volumes:
       - ./grafana-storage:/var/lib/grafana
-      
     ports:
       - "3002:3000"
-
     networks:
       - pre-go-local-networks
+
+  redis:
+    image: redis:7.0
+    container_name: redis_container
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data/redis_data:/data
+    networks:
+      - pre-go-local-networks
+
+  redis-master:
+    image: redis:7.0
+    container_name: redis-master
+    ports:
+      - "6382:6379"
+    networks:
+      - pre-go-local-networks
+    command: redis-server --appendonly yes --requirepass masterpass
+    volumes:
+      - ./data/redis/master:/data
+
+  redis-slave1:
+    image: redis:7.0
+    container_name: redis-slave1
+    ports:
+      - "6380:6379"
+    networks:
+      - pre-go-local-networks
+    command: >
+      redis-server --replicaof redis-master 6379
+                   --requirepass masterpass
+                   --masterauth masterpass
+    depends_on:
+      - redis-master
+    volumes:
+      - ./data/redis/slave1:/data
+
+  redis-slave2:
+    image: redis:7.0
+    container_name: redis-slave2
+    ports:
+      - "6381:6379"
+    networks:
+      - pre-go-local-networks
+    command: >
+      redis-server --replicaof redis-master 6379
+                   --requirepass masterpass
+                   --masterauth masterpass
+    depends_on:
+      - redis-master
+    volumes:
+      - ./data/redis/slave2:/data
+
+  sentinel-1:
+    image: redis:7.0
+    container_name: sentinel-1
+    ports:
+      - "26379:26379"
+    networks:
+      - pre-go-local-networks
+    command: redis-sentinel /etc/sentinel/sentinel.conf
+    depends_on:
+      - redis-master
+    volumes:
+      - ./data/sentinel/sentinel-1.conf:/etc/sentinel/sentinel.conf
+
+  sentinel-2:
+    image: redis:7.0
+    container_name: sentinel-2
+    ports:
+      - "26380:26379"
+    networks:
+      - pre-go-local-networks
+    command: redis-sentinel /etc/sentinel/sentinel.conf
+    depends_on:
+      - redis-master
+      - redis-slave1
+      - redis-slave2
+    volumes:
+      - ./data/sentinel/sentinel-2.conf:/etc/sentinel/sentinel.conf
+
+  sentinel-3:
+    image: redis:7.0
+    container_name: sentinel-3
+    ports:
+      - "26381:26379"
+    networks:
+      - pre-go-local-networks
+    command: redis-sentinel /etc/sentinel/sentinel.conf
+    depends_on:
+      - redis-master
+      - redis-slave1
+      - redis-slave2
+    volumes:
+      - ./data/sentinel/sentinel-3.conf:/etc/sentinel/sentinel.conf
